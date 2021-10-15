@@ -20,13 +20,14 @@ class Docker: IExecProvider
 {
 	private immutable BaseDockerImage = "dlangtour/core-exec";
 	private immutable DockerImages = [
-		BaseDockerImage ~ ":dmd",
-		BaseDockerImage ~ ":dmd-beta",
-		BaseDockerImage ~ ":dmd-nightly",
-		BaseDockerImage ~ ":ldc",
-		BaseDockerImage ~ ":ldc-beta",
+		//BaseDockerImage ~ ":dmd",
+		//BaseDockerImage ~ ":dmd-beta",
+		//BaseDockerImage ~ ":dmd-nightly",
+		//BaseDockerImage ~ ":ldc",
+		//BaseDockerImage ~ ":ldc-beta",
+		"core_reflect_gdb_gui",
 		//BaseDockerImage ~ ":gdc"
-		"dlangtour/core-dreg:latest",
+		//"dlangtour/core-dreg:latest",
 	];
 
 	private int timeLimitInSeconds_;
@@ -130,6 +131,7 @@ class Docker: IExecProvider
 		    "-e", "DOCKER_COLOR",
 		    "-e", "DOCKER_FLAGS",
 		    "-e", "DOCKER_RUNTIME_ARGS",
+                    "-p", "5000:5000",
 			"--net=none", "--memory-swap=-1",
 			"-m", to!string(memoryLimitMB_ * 1024 * 1024),
 			dockerImage, encoded];
@@ -191,6 +193,7 @@ class Docker: IExecProvider
 
 	Package[] installedPackages()
 	{
+/+
 		import std.array : array;
 		import std.algorithm.iteration : filter, joiner, map, splitter;
 		import std.range : empty, dropOne;
@@ -206,5 +209,7 @@ class Docker: IExecProvider
 				return Package(ps.front, ps.dropOne.front.filter!(a => a != '"').to!string);
 			})
 			.array;
++/
+	return [];
 	}
 }

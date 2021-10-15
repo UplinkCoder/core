@@ -28,34 +28,9 @@ block content
 						span Run
 						i.fa.fa-play(aria-hidden="true")
 					div.editor-btn-container
-						select(ng-model="compiler", name="compiler", title="Select a compiler")
-							option(value="dmd", selected) dmd
-							option(value="dmd-beta") dmd-beta
-							option(value="dmd-nightly") dmd-nightly
-							option(value="ldc-beta") ldc-beta
-							option(value="ldc") ldc
-							option(value="dreg") All dmd compilers (2.060 - latest)
-					div.editor-btn-container
 						input(ng-model="args", name="args", placeholder="Compiler arguments", title="Add additional compiler arguments")
-					div#add-library
-						button.btn.btn-default(ng-click="addLibrary()")
-							span Add library
-							i.fa.fa-plus(aria-hidden="true")
-						select#add-library-select(ng-model="availableLibrary", name="availableLibrary", ng-change="onAddLibrary()", ng-blur="onBlurLibrary()", title="Add a DUB package")
-							option(value="none") None
-							- foreach (p; installedPackages)
-								option(value="#{p.name} #{p.version_}") #{p.name } #{p.version_}
 
 					span.hidden-xs.hidden-sm.hidden-md
-						button.btn.btn-default(ng-click="ir()",ng-show="compiler.indexOf('ldc') >= 0", title="LLVM Intermediate Representation")
-							span IR
-							i.fa.fa-text-o(aria-hidden="true")
-						button.btn.btn-default(ng-click="asm()", title="Assembly output")
-							span ASM
-							i.fa.fa-flask(aria-hidden="true")
-						button.btn.btn-default(ng-click="ast()", title="DMD's AST after all semantic phases")
-							span AST
-							i.fa.fa-tree(aria-hidden="true")
 					span.hidden-except-huge
 						button.btn.btn-default(ng-click="jsonOutput()", title="JSON representation of DMD's AST")
 							span -X

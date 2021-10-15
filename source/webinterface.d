@@ -119,10 +119,10 @@ class WebInterface
 	void index(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		// support "standalone" mode of the editor
-		if (req.host == "run.dlang.io")
+		//if (req.host == "run.dlang.io")
 			getEditor(req, res);
-		else
-			getStart(req, res, defaultLang);
+		//else
+		//	getStart(req, res, defaultLang);
 	}
 
 	@path("/tour/:language")
@@ -257,7 +257,7 @@ class WebInterface
 		];
 	}
 
-	@path("/editor")
+	@path("/run/")
 	void getEditor(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		import std.base64;
@@ -267,11 +267,11 @@ class WebInterface
 		} else if (auto s = "b64source" in req.query) {
 			sourceCode = *s;
 		} else {
-			auto sourceCodeRaw = "import std;\nvoid main()\n{\n    writeln(\"Hello D\");\n}";
-			sourceCode = Base64.encode(cast(ubyte[]) sourceCodeRaw);
+			auto sourceCodeRaw = import("tutorial.d");
+                        sourceCode = Base64.encode(cast(ubyte[]) sourceCodeRaw);
 		}
 		auto googleAnalyticsId = googleAnalyticsId_;
-        showEditor(sourceCode);
+		showEditor(sourceCode);
 	}
 
 	@path("/gist/:gist")

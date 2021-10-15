@@ -9,14 +9,14 @@ tls:
     privateKeyFile: "server.pem"
     port: 8443
 exec:
-    driver: "stupidlocal"
+    #driver: "stupidlocal"
     # driver: "off"
-    # driver: "docker"
+    driver: "docker"
     # # For docker driver
-    # config:
-    #     memory_limit: 128
-    #     maximum_queue_size: 10
-    #     time_limit: 10
-    #     maximum_output_size: 4096
-    #     docker_binary_path: "/usr/bin/docker"
+    config:
+         memory_limit: 128
+         maximum_queue_size: 10
+         time_limit: 10
+         maximum_output_size: 8192
+         docker_binary_path: "/usr/bin/docker"
     cache: true
