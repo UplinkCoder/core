@@ -46,11 +46,48 @@ interface IApiV1
 		@optional bool color;
 	}
 
-	@bodyParam("input")
-	@method(HTTPMethod.POST)
-	@path("/api/v1/run")
-	RunOutput run(RunInput input);
+    @bodyParam("input")
+    @method(HTTPMethod.POST)
+    @path("/api/v1/run")
+    RunOutput run(RunInput input);
 
+
+    struct RunDebugOutput
+    {
+        string output;
+        bool success;
+        struct Message {
+            int line;
+            string message;
+        }
+        Message[] errors;
+        Message[] warnings;
+        string debugUrl;
+    }
+
+    /++
+        POST /api/v1/run_debug
+        {
+            source: "...",
+            compiler: "dmd" (available: ["dmd-nightly", "dmd-beta", "dmd", "ldc-beta", "ldc", "gdc"])
+        }
+
+        Returns: output of compiled D program with success
+        flag and parsed errors and warnings (if any
+        and success is false).
+        {
+            output: "Program Output",
+            success: true/false
+            debug_url : "url to for the debug_iframe to present debugger"
+        }
+    +/
+
+    @bodyParam("input")
+    @method(HTTPMethod.POST)
+    @path("/api/v1/run_debug")
+    RunDebugOutput run_debug(RunInput input);
+
+	
 	/+
 		POST /api/v1/format
 		{

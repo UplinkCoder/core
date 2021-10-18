@@ -16,7 +16,7 @@ import std.conv: to;
 	dlangtour/core-exec to compile and run
 	the resulting binary.
 +/
-class Docker: IExecProvider
+class Docker: IDebugProvider
 {
 	private immutable BaseDockerImage = "dlangtour/core-exec";
 	private immutable DockerImages = [
@@ -190,6 +190,99 @@ class Docker: IExecProvider
 
 		return typeof(return)(output, success);
 	}
+
+    Tuple!(string, "output", bool, "success", string, "debugUrl")
+    compileAndDebug(RunInput input)
+    {
+		import std.string: format;
+		import std.algorithm.searching : canFind, find;
+
+		if (queueSize_ > maximumQueueSize_) {
+			return typeof(return)("Maximum number of parallel compiles has been exceeded. Try again later.", false, "");
+		}
+
+		import core.atomic : atomicOp;
+		atomicOp!"+="(queueSize_, 1);
+		scope(exit) atomicOp!"-="(queueSize_, 1);
+
+        string debugUrl;
+
+		auto encoded = Base64.encode(cast(ubyte[]) input.source);
+		// try to find the compiler in the available images
+		auto r = DockerImages.find!(d => d.canFind(input.compiler));
+		// use dmd as fallback
+		const dockerImage = (r.length > 0) ? r[0] : DockerImages[0];
+
+        auto env = [
+            "DOCKER_FLAGS": input.args,
+            "DOCKER_RUNTIME_ARGS": input.runtimeArgs,
+            "DOCKER_COLOR": input.color ? "on" : "off",
+        ];
+
+        auto args = [this.dockerBinaryPath_, "run", "--rm",
+		    "-e", "DOCKER_COLOR",
+		    "-e", "DOCKER_FLAGS",
+		    "-e", "DOCKER_RUNTIME_ARGS",
+                    "-p", "5000:5000",
+			"--net=none", "--memory-swap=-1",
+			"-m", to!string(memoryLimitMB_ * 1024 * 1024),
+			dockerImage, encoded];
+		if (input.stdin) {
+			args ~= Base64.encode(cast(ubyte[]) input.stdin);
+		}
+
+		auto docker = pipeProcess(args,
+				Redirect.stdout | Redirect.stderrToStdout | Redirect.stdin, env);
+		docker.stdin.write(encoded);
+		docker.stdin.flush();
+		docker.stdin.close();
+
+		bool success;
+		auto startTime = MonoTime.currTime();
+
+		logInfo("Executing Docker image %s with env='%s'", dockerImage, env);
+
+		string output;
+		enum bufReadLength = 4096;
+		// returns true if the maximum output limit has been exceeded
+		bool readFromPipe() {
+            while (true) {
+                auto buf = docker.stdout.rawRead(new char[bufReadLength]);
+                output ~= buf;
+				if (output.length > maximumOutputSize_) {
+					output ~= "\n\n---Program's output exceeds limit of %d bytes.---".format(maximumOutputSize_);
+					return true;
+				}
+				if (buf.length < bufReadLength)
+				    break;
+			}
+			return false;
+		}
+
+		// Don't block and give away current time slice
+		// by sleeping for a certain time until child process has finished. Kill process if time limit
+		// has been reached.
+		while (true) {
+			auto result = tryWait(docker.pid);
+			if (MonoTime.currTime() - startTime > timeLimitInSeconds_.seconds) {
+				// send SIGKILL 9 to process
+				kill(docker.pid, 9);
+				return typeof(return)("Compilation or running program took longer than %d seconds. Aborted!".format(timeLimitInSeconds_), false, "");
+			}
+			if (result.terminated) {
+				success = result.status == 0;
+				break;
+			}
+
+			sleep(50.msecs);
+			if (readFromPipe())
+				return typeof(return)(output, success, debugUrl);
+		}
+		readFromPipe();
+
+		return typeof(return)(output, success, debugUrl);
+    }
+
 
 	Package[] installedPackages()
 	{

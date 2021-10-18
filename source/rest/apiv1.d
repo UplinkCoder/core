@@ -72,6 +72,32 @@ class ApiV1: IApiV1
 	// to be enough for everybody.
 	enum uint maxSourceCodeLength = 64 * 1024;
 
+
+    RunOutput run_debug(ApiV1.RunInput input)
+    {
+        if (input.source.length > maxSourceCodeLength) {
+            return RunOutput("ERROR: source code size is above limit of 64k bytes.", false);
+        }
+        
+        // sanitize input and remove weird unicode characters
+        input.source = input.source.removeUnicodeSpaces;
+        
+        // Be explicit here, in case the exec API and the REST API change
+        IExecProvider.RunInput runInput = {
+        source: input.source,
+                compiler : input.compiler,
+                args: input.args ~ " -g",
+                runtimeArgs: input.runtimeArgs,
+                stdin: input.stdin,
+                color: input.color,
+        };
+        auto result = execProvider_.compileAndExecute(runInput);
+        auto output = RunOutput(result.output, result.success);
+        parseErrorsAndWarnings(output);
+        return output;
+    }
+
+
 	RunOutput run(ApiV1.RunInput input)
 	{
 		if (input.source.length > maxSourceCodeLength) {
