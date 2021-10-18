@@ -25,3 +25,8 @@ interface IExecProvider
 	// returns a list of all installed DUB packages
 	Package[] installedPackages();
 }
+
+interface IDebugProvider : IExecProvider
+{
+    Tuple!(string, "output", bool, "success", string, "debugUrl") compileAndDebug(RunInput input);
+}
