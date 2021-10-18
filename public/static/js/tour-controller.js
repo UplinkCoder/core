@@ -263,6 +263,10 @@ dlangTourApp.controller('DlangTourAppCtrl',
 		});
 	}
 
+    $scope.run_debug = function() {
+        console.log("someone clicked run_debug");
+    }
+
 	$scope.asm = function() {
 		var args = $scope.args || "";
 		if ($scope.compiler.indexOf("dmd") >=0 && args.indexOf("-asm") < 0) {

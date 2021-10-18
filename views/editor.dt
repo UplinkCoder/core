@@ -29,6 +29,9 @@ block content
 						i.fa.fa-play(aria-hidden="true")
 					div.editor-btn-container
 						input(ng-model="args", name="args", placeholder="Compiler arguments", title="Add additional compiler arguments")
+					button.btn.btn-primary(ng-click="run_debug()", title="Rund and Debug with gdbgui")
+						span Run and Debug
+						i.fa.fa-play(aria-hidden="true")
 
 					span.hidden-xs.hidden-sm.hidden-md
 					span.hidden-except-huge
