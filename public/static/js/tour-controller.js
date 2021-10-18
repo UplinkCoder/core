@@ -263,9 +263,43 @@ dlangTourApp.controller('DlangTourAppCtrl',
 		});
 	}
 
-    $scope.run_debug = function() {
-        console.log("someone clicked run_debug");
-    }
+	$scope.run_debug = function() {
+ 	       console.log("someone clicked run_debug");
+		$http.post('/api/v1/run_debug', {
+			source: $scope.sourceCode,
+			compiler: $scope.compiler,
+			args: args,
+			color: true
+		}).then(function(body) {
+			var data = body.data;
+			var debugFrame = data.
+			var html = data.output;
+			if (args.indexOf("-output-s") >=0 || args.indexOf("-output-ll") >= 0 ||
+				args.indexOf("-asm") >= 0 || args.indexOf("-vcg-ast") >= 0 ||
+				args.indexOf("-Xf=-") >= 0) {
+				html = hljs.highlightAuto(html).value;
+			} else if (args.indexOf("-D") >= 0) {
+				// removes padding on the left side
+				html = html.replace("max-width: 980px;", "max-width: default;");
+				$scope.useOutputIFrame = true;
+			} else {
+				html = ansi_up.ansi_to_html(html);
+			}
+			$scope.programOutput = $sce.trustAsHtml(html);
+			$scope.warnings = data.warnings;
+			$scope.errors = data.errors;
+			// Enable linting
+			$scope.editor.setOption("lint", {
+				getAnnotations: $scope.updateErrorsAndWarnings
+			});
+		}, function(error) {
+			var msg = (error || {}).statusMessage || "";
+			$scope.programOutput = $sce.trustAsHtml("Server error: " + msg);
+		}).finally(function(){
+			clearInterval(progressInterval);
+			$scope.inProgress = false;
+		});
+	}
 
 	$scope.asm = function() {
 		var args = $scope.args || "";
