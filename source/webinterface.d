@@ -257,6 +257,12 @@ class WebInterface
 		];
 	}
 
+    @path("/beta/")
+    void getBetaEditor(HTTPServerRequest req, HTTPServerResponse res)
+    {
+        return getEditor(req, res);
+    }
+
 	@path("/run/")
 	void getEditor(HTTPServerRequest req, HTTPServerResponse res)
 	{
