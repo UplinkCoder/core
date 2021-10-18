@@ -304,10 +304,10 @@ class WebInterface
 
 	void showEditor(string sourceCode) {
 	    string googleAnalyticsId = googleAnalyticsId_;
-		const title = "Online D Editor";
+		const title = "Online D Editor (core.reflect)";
 		const chapterId = "";
 		const language = "en";
-		const name = "run.dlang.io";
+		const name = "corereflect.org/run";
 		static immutable toc = buildDlangToc();
 		string topHelpLink = "https://github.com/dlang-tour/core/wiki/run.dlang.io";
 		auto installedPackages = installedPackages_;
