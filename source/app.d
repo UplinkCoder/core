@@ -129,12 +129,14 @@ shared static this()
 	bool sanityCheck = false;
 	string customLangDirectory;
 	string defaultLang = "en";
+    bool beta;
 
 	readOption("c|config", &configFile, "Configuration file");
 	readOption("wait-until-pulled", &waitUntilPulled, "Wait until all docker images have been pulled.");
 	readOption("sanitycheck", &sanityCheck,
 	    "Runs sanity check before starting that checks whether all source code examples actually compile; doesn't start the service");
 	readOption("lang-dir|l", &customLangDirectory, "Language directory");
+    readOption("beta", &beta, "Run on Beta port");
 
 	auto config = new Config(configFile);
 
@@ -230,6 +232,10 @@ shared static this()
 		});
 		listenHTTP(httpsSettings, urlRouter);
 	} else {
+        if (beta)
+        {
+            settings.port = 8081;
+        }
 		listenHTTP(settings, urlRouter);
 	}
 }
