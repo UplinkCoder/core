@@ -25,7 +25,7 @@ class Docker: IDebugProvider
 		//BaseDockerImage ~ ":dmd-nightly",
 		//BaseDockerImage ~ ":ldc",
 		//BaseDockerImage ~ ":ldc-beta",
-		"core_reflect_gdb_gui",
+		"core_reflect_gdb_gui:latest",
 		//BaseDockerImage ~ ":gdc"
 		//"dlangtour/core-dreg:latest",
 	];
@@ -205,25 +205,30 @@ class Docker: IDebugProvider
 		atomicOp!"+="(queueSize_, 1);
 		scope(exit) atomicOp!"-="(queueSize_, 1);
 
-        string debugUrl;
+                // replace by random debug id
+		string debugId = "baz";
 
 		auto encoded = Base64.encode(cast(ubyte[]) input.source);
 		// try to find the compiler in the available images
 		auto r = DockerImages.find!(d => d.canFind(input.compiler));
 		// use dmd as fallback
 		const dockerImage = (r.length > 0) ? r[0] : DockerImages[0];
+		const socket_dir = "/var/run/ttyd.sock";
+                const debugUrl = "/tty/_" ~ debugId ~ "_";
 
         auto env = [
+            "DEBUG_ID" : debugId,
             "DOCKER_FLAGS": input.args,
             "DOCKER_RUNTIME_ARGS": input.runtimeArgs,
             "DOCKER_COLOR": input.color ? "on" : "off",
         ];
 
         auto args = [this.dockerBinaryPath_, "run", "--rm",
+                    "-v" ~ socket_dir ~ ":" ~ socket_dir,
+                    "-e", "DEBUG_ID",
 		    "-e", "DOCKER_COLOR",
 		    "-e", "DOCKER_FLAGS",
 		    "-e", "DOCKER_RUNTIME_ARGS",
-                    "-p", "5000:5000",
 			"--net=none", "--memory-swap=-1",
 			"-m", to!string(memoryLimitMB_ * 1024 * 1024),
 			dockerImage, encoded];
@@ -232,7 +237,7 @@ class Docker: IDebugProvider
 		}
 
 		auto docker = pipeProcess(args,
-				Redirect.stdout | Redirect.stderrToStdout | Redirect.stdin, env);
+				Redirect.stdout | Redirect.stderr | Redirect.stdin, env);
 		docker.stdin.write(encoded);
 		docker.stdin.flush();
 		docker.stdin.close();
@@ -240,10 +245,11 @@ class Docker: IDebugProvider
 		bool success;
 		auto startTime = MonoTime.currTime();
 
-		logInfo("Executing Docker image %s with env='%s'", dockerImage, env);
+		logInfo("Executing Docker image %s with env='%s' args='%s'", dockerImage, env, args);
 
 		string output;
 		enum bufReadLength = 4096;
+                import std.stdio; writeln(docker.stderr.read());
 		// returns true if the maximum output limit has been exceeded
 		bool readFromPipe() {
             while (true) {
@@ -267,7 +273,7 @@ class Docker: IDebugProvider
 			if (MonoTime.currTime() - startTime > timeLimitInSeconds_.seconds) {
 				// send SIGKILL 9 to process
 				kill(docker.pid, 9);
-				return typeof(return)("Compilation or running program took longer than %d seconds. Aborted!".format(timeLimitInSeconds_), false, "");
+				return typeof(return)("Compilation or running program took longer than %d seconds. Aborted!".format(timeLimitInSeconds_), false, "timeout");
 			}
 			if (result.terminated) {
 				success = result.status == 0;

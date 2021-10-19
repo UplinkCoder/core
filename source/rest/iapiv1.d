@@ -84,7 +84,7 @@ interface IApiV1
 
     @bodyParam("input")
     @method(HTTPMethod.POST)
-    @path("/api/v1/run_debug")
+    @path("/beta/api/v1/run_debug")
     RunDebugOutput run_debug(RunInput input);
 
 	

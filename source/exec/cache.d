@@ -11,9 +11,9 @@ import vibe.core.log;
  Execution provider that implements caching
  for an allowed white list of source code files.
 +/
-class Cache: IExecProvider
+class Cache: IDebugProvider
 {
-	private IExecProvider realExecProvider_;
+	private IDebugProvider realExecProvider_;
 
 	private alias ResultTuple = ReturnType!compileAndExecute;
 	private alias HashType = ReturnType!getSourceCodeHash;
@@ -27,7 +27,7 @@ class Cache: IExecProvider
 	  sourceCodeWhitelist = raw source code only allowed
 	                        to be cached
 	+/
-	this(IExecProvider realExecProvider,
+	this(IDebugProvider realExecProvider,
 		string[] sourceCodeWhitelist)
 	{
 		import std.algorithm: map;
@@ -59,6 +59,11 @@ class Cache: IExecProvider
 			sourceHashToOutput_[hash] = result;
 			return result;
 		}
+	}
+
+	Tuple!(string, "output", bool, "success", string, "debugUrl") compileAndDebug(RunInput input)
+	{
+		return realExecProvider_.compileAndDebug(input);
 	}
 
 	Package[] installedPackages()

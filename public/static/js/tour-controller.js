@@ -263,8 +263,14 @@ dlangTourApp.controller('DlangTourAppCtrl',
 		});
 	}
 
-	$scope.run_debug = function() {
+	$scope.run_debug = function(args) {
  	       console.log("someone clicked run_debug");
+
+		args = args || $scope.args;
+		$scope.programOutput = $sce.trustAsHtml("... Waiting for remote service ...");
+		$scope.inProgress = true;
+		var currentNanobarValue = 0;
+
 		$http.post('/api/v1/run_debug', {
 			source: $scope.sourceCode,
 			compiler: $scope.compiler,
@@ -272,7 +278,7 @@ dlangTourApp.controller('DlangTourAppCtrl',
 			color: true
 		}).then(function(body) {
 			var data = body.data;
-			var debugFrame = data.
+			var debugFrame = data.debugUrl;
 			var html = data.output;
 			if (args.indexOf("-output-s") >=0 || args.indexOf("-output-ll") >= 0 ||
 				args.indexOf("-asm") >= 0 || args.indexOf("-vcg-ast") >= 0 ||

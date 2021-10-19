@@ -264,7 +264,6 @@ class WebInterface
     }
 
 	@path("/run/")
-    @path("/beta/")
 	void getEditor(HTTPServerRequest req, HTTPServerResponse res)
 	{
 		import std.base64;

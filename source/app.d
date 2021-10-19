@@ -28,19 +28,14 @@ bool waitUntilPulled;
 /++ Factory method that returns an execution provider
     depending on the configuration settings.
 +/
-private IExecProvider createExecProvider(Config config,
+private IDebugProvider createExecProvider(Config config,
 		ContentProvider contentProvider)
 {
-	IExecProvider execProvider;
+	IDebugProvider execProvider;
 
 	logInfo("Using execution driver '%s'", config.execProvider);
 
 	switch (config.execProvider) {
-		case "stupidlocal":
-			execProvider = new StupidLocal;
-			break;
-		case "off":
-			return new Off;
 		case "docker":
 			execProvider = new Docker(config.dockerExecConfig.timeLimit,
 					config.dockerExecConfig.maximumOutputSize,
@@ -50,7 +45,7 @@ private IExecProvider createExecProvider(Config config,
 					waitUntilPulled);
 			break;
 		default:
-			throw new Exception("Unknown exec provider %s".format(config.execProvider));
+			throw new Exception("Unknown (debug) exec provider %s".format(config.execProvider));
 	}
 
 	logInfo("Caching enabled: %b", config.enableExecCache);

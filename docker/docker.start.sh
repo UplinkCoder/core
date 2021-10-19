@@ -12,4 +12,4 @@ cat /config.yml.tmpl | \
   sed "s@%TLS_PRIVATE_KEY_FILE%@${TLS_PRIVATE_KEY_FILE:-}@g" \
   > /config.yml
 
-exec /dlang-tour $*
+exec /dlang-tour --beta $*
