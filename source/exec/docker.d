@@ -205,7 +205,13 @@ class Docker: IDebugProvider
 		atomicOp!"+="(queueSize_, 1);
 		scope(exit) atomicOp!"-="(queueSize_, 1);
 
-                // replace by random debug id
+		// replace by random debug id
+		import std.random;
+		const(char)[] random_name;
+		foreach(i; 0 .. 6)
+		{
+			uniform()
+		} 
 		string debugId = "baz";
 
 		auto encoded = Base64.encode(cast(ubyte[]) input.source);
@@ -217,10 +223,10 @@ class Docker: IDebugProvider
                 const debugUrl = "/tty/_" ~ debugId ~ "_";
 
         auto env = [
-            "DEBUG_ID" : debugId,
-            "DOCKER_FLAGS": input.args,
-            "DOCKER_RUNTIME_ARGS": input.runtimeArgs,
-            "DOCKER_COLOR": input.color ? "on" : "off",
+		"DEBUG_ID" : debugId,
+		"DOCKER_FLAGS": input.args,
+		"DOCKER_RUNTIME_ARGS": input.runtimeArgs,
+		"DOCKER_COLOR": input.color ? "on" : "off",
         ];
 
         auto args = [this.dockerBinaryPath_, "run", "--rm",
@@ -237,7 +243,7 @@ class Docker: IDebugProvider
 		}
 
 		auto docker = pipeProcess(args,
-				Redirect.stdout | Redirect.stderr | Redirect.stdin, env);
+				Redirect.stdout | Redirect.stderrToStdout | Redirect.stdin, env);
 		docker.stdin.write(encoded);
 		docker.stdin.flush();
 		docker.stdin.close();
@@ -247,9 +253,8 @@ class Docker: IDebugProvider
 
 		logInfo("Executing Docker image %s with env='%s' args='%s'", dockerImage, env, args);
 
-		string output;
+		string output = "Your debug session is being prepared\n";
 		enum bufReadLength = 4096;
-                import std.stdio; writeln(docker.stderr.read());
 		// returns true if the maximum output limit has been exceeded
 		bool readFromPipe() {
             while (true) {
