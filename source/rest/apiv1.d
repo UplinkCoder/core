@@ -96,11 +96,27 @@ class ApiV1: IApiV1
                 if (debugProvider_) logInfo ("Got debugProvider.");
 		else logInfo (typeid(execProvider_).toString());
                 RunDebugOutput output;
-		if (debugProvider_)
+		
+        import std.random;
+        enum debugIdLength = 6;
+        char[debugIdLength] debugId;
+        foreach(i; 0 .. debugIdLength)
+        {
+            debugId[i] = uniform('a', 'z');
+        }
+        output = RunDebugOutput("No Debug execution service avilable at this time\n", 0);
+        if (debugProvider_)
 		{
-			auto result = debugProvider_.compileAndDebug(runInput);
-			output = RunDebugOutput(result.output, result.success);
-	                output.debugUrl = result.debugUrl;
+            auto debugUrl = "https://corereflect.org/ttyd/_" ~ cast(string)debugId ~ "_";
+            output = RunDebugOutput("Your debug session should be accessiable now at: " ~ debugUrl ~ " \n", 1);
+
+			auto result = debugProvider_.compileAndDebug(runInput, cast(string) debugId);
+            if (result.queueFull)
+            {
+                output.success = 0;
+                output.output = "Maximum number of parallel debug sessions exceeded try again later\n";
+            }
+	        output.debugUrl = debugUrl;
 		}
 		// parseErrorsAndWarnings(output);
 		return output;

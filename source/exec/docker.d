@@ -191,28 +191,20 @@ class Docker: IDebugProvider
 		return typeof(return)(output, success);
 	}
 
-    Tuple!(string, "output", bool, "success", string, "debugUrl")
-    compileAndDebug(RunInput input)
+    CompileAndDebugReturn compileAndDebug(RunInput input, string debugId)
     {
 		import std.string: format;
 		import std.algorithm.searching : canFind, find;
 
 		if (queueSize_ > maximumQueueSize_) {
-			return typeof(return)("Maximum number of parallel compiles has been exceeded. Try again later.", false, "");
+            CompileAndDebugReturn result;
+            result.queueFull = true;
+			return result;
 		}
 
 		import core.atomic : atomicOp;
 		atomicOp!"+="(queueSize_, 1);
 		scope(exit) atomicOp!"-="(queueSize_, 1);
-
-		// replace by random debug id
-		import std.random;
-		const(char)[] random_name;
-		foreach(i; 0 .. 6)
-		{
-			uniform()
-		} 
-		string debugId = "baz";
 
 		auto encoded = Base64.encode(cast(ubyte[]) input.source);
 		// try to find the compiler in the available images
@@ -253,45 +245,10 @@ class Docker: IDebugProvider
 
 		logInfo("Executing Docker image %s with env='%s' args='%s'", dockerImage, env, args);
 
-		string output = "Your debug session is being prepared\n";
 		enum bufReadLength = 4096;
 		// returns true if the maximum output limit has been exceeded
-		bool readFromPipe() {
-            while (true) {
-                auto buf = docker.stdout.rawRead(new char[bufReadLength]);
-                output ~= buf;
-				if (output.length > maximumOutputSize_) {
-					output ~= "\n\n---Program's output exceeds limit of %d bytes.---".format(maximumOutputSize_);
-					return true;
-				}
-				if (buf.length < bufReadLength)
-				    break;
-			}
-			return false;
-		}
-
-		// Don't block and give away current time slice
-		// by sleeping for a certain time until child process has finished. Kill process if time limit
-		// has been reached.
-		while (true) {
-			auto result = tryWait(docker.pid);
-			if (MonoTime.currTime() - startTime > timeLimitInSeconds_.seconds) {
-				// send SIGKILL 9 to process
-				kill(docker.pid, 9);
-				return typeof(return)("Compilation or running program took longer than %d seconds. Aborted!".format(timeLimitInSeconds_), false, "timeout");
-			}
-			if (result.terminated) {
-				success = result.status == 0;
-				break;
-			}
-
-			sleep(50.msecs);
-			if (readFromPipe())
-				return typeof(return)(output, success, debugUrl);
-		}
-		readFromPipe();
-
-		return typeof(return)(output, success, debugUrl);
+		
+        return CompileAndDebugReturn(docker, startTime);
     }
 
 

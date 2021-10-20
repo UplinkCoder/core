@@ -61,9 +61,9 @@ class Cache: IDebugProvider
 		}
 	}
 
-	Tuple!(string, "output", bool, "success", string, "debugUrl") compileAndDebug(RunInput input)
+	CompileAndDebugReturn compileAndDebug(RunInput input, string debugId)
 	{
-		return realExecProvider_.compileAndDebug(input);
+		return realExecProvider_.compileAndDebug(input, debugId);
 	}
 
 	Package[] installedPackages()

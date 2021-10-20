@@ -25,8 +25,15 @@ interface IExecProvider
 	// returns a list of all installed DUB packages
 	Package[] installedPackages();
 }
+import std.process; import core.time;
+struct CompileAndDebugReturn
+{
+    ProcessPipes process;
+    typeof(MonoTime.currTime()) startTime;
+    bool queueFull;
+}
 
 interface IDebugProvider : IExecProvider
 {
-    Tuple!(string, "output", bool, "success", string, "debugUrl") compileAndDebug(RunInput input);
+    CompileAndDebugReturn compileAndDebug(RunInput input, string debugId);
 }
